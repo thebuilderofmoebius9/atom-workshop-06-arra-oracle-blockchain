@@ -14,3 +14,9 @@ services:
       - "2"
     ports:
       - "18545:18545"
+
+  atom-frontend:
+    build: ./frontend
+    container_name: atom-paymaster-frontend
+    ports:
+      - "8719:80"

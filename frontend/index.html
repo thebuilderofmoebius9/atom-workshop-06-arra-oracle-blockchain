@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atom Paymaster Lab — Chain 20260619</title>
+  <style>
+    :root { color-scheme: dark; --bg:#080b14; --card:#111827; --line:#263248; --text:#e5edf8; --muted:#9fb0c9; --ok:#6ee7b7; --warn:#fbbf24; --atom:#8b5cf6; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; background: radial-gradient(circle at top left,#1e1b4b 0,#080b14 42%); color:var(--text); }
+    main { max-width: 980px; margin: 0 auto; padding: 42px 20px; }
+    .hero { border:1px solid var(--line); border-radius:24px; padding:28px; background:linear-gradient(135deg,rgba(139,92,246,.22),rgba(17,24,39,.9)); box-shadow:0 20px 80px rgba(0,0,0,.35); }
+    h1 { margin:0 0 10px; font-size: clamp(30px,5vw,56px); letter-spacing:-.04em; }
+    p { color:var(--muted); line-height:1.65; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:22px; }
+    .card { border:1px solid var(--line); background:rgba(17,24,39,.88); border-radius:18px; padding:18px; }
+    .label { color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+    .value { font-size:24px; font-weight:800; margin-top:6px; word-break:break-all; }
+    .ok { color:var(--ok); } .warn { color:var(--warn); } .atom { color:var(--atom); }
+    code { background:#0b1020; border:1px solid var(--line); padding:2px 6px; border-radius:8px; }
+    a { color:#93c5fd; }
+    button { margin-top:18px; background:var(--atom); color:white; border:0; border-radius:14px; padding:12px 16px; font-weight:700; cursor:pointer; }
+    pre { white-space:pre-wrap; color:#d7e3f8; background:#050814; border:1px solid var(--line); border-radius:16px; padding:14px; overflow:auto; }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div class="label atom">Atom Oracle — Paymaster / Account Abstraction Lab</div>
+    <h1>Chain <span class="atom">20260619</span></h1>
+    <p>Frontend สำหรับ workshop-06 แสดงสถานะ live RPC ของ Atom chain และอธิบาย flow Paymaster แบบ ERC-4337: user ส่ง UserOperation → bundler → EntryPoint → smart account/paymaster โดย paymaster sponsor gas หรือรับ ERC-20 ใน UX layer.</p>
+    <div class="grid">
+      <div class="card"><div class="label">RPC</div><div class="value" id="rpc">http://141.11.156.4:18545</div></div>
+      <div class="card"><div class="label">Chain ID</div><div class="value" id="chainId">checking…</div></div>
+      <div class="card"><div class="label">Latest block</div><div class="value" id="block">checking…</div></div>
+      <div class="card"><div class="label">Client</div><div class="value" id="client">checking…</div></div>
+    </div>
+    <button onclick="refresh()">Refresh live RPC</button>
+  </section>
+  <section class="grid">
+    <div class="card">
+      <h2>Paymaster คืออะไร</h2>
+      <p>Paymaster เป็น application/account-abstraction layer ของ ERC-4337 ไม่ใช่ native gas token ของ chain. มันช่วย sponsor gas หรือให้ผู้ใช้จ่าย ERC-20 แล้ว paymaster ไปจัดการ native gas ให้ EntryPoint.</p>
+    </div>
+    <div class="card">
+      <h2>CGT ต่างกันอย่างไร</h2>
+      <p>Custom Gas Token ของ OP Stack เป็น protocol/operator layer สำหรับกำหนด native fee currency ตอน deploy chain. ใช้คนละชั้นกับ Paymaster.</p>
+    </div>
+  </section>
+  <h2>Raw RPC proof</h2>
+  <pre id="raw">loading…</pre>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const RPC = params.get('rpc') || 'http://141.11.156.4:18545';
+document.getElementById('rpc').textContent = RPC;
+async function call(method, params=[]) {
+  const res = await fetch(RPC, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({jsonrpc:'2.0', id:Date.now(), method, params}) });
+  if (!res.ok) throw new Error(`${method} HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.error) throw new Error(`${method} ${JSON.stringify(json.error)}`);
+  return json.result;
+}
+async function refresh() {
+  const raw = {};
+  try {
+    raw.chainHex = await call('eth_chainId');
+    raw.chainId = parseInt(raw.chainHex, 16);
+    raw.blockHex = await call('eth_blockNumber');
+    raw.blockNumber = parseInt(raw.blockHex, 16);
+    raw.client = await call('web3_clientVersion');
+    document.getElementById('chainId').textContent = raw.chainId;
+    document.getElementById('chainId').className = raw.chainId === 20260619 ? 'value ok' : 'value warn';
+    document.getElementById('block').textContent = raw.blockNumber;
+    document.getElementById('block').className = 'value ok';
+    document.getElementById('client').textContent = raw.client;
+    document.getElementById('raw').textContent = JSON.stringify(raw, null, 2);
+  } catch (err) {
+    document.getElementById('chainId').textContent = 'RPC error';
+    document.getElementById('chainId').className = 'value warn';
+    document.getElementById('raw').textContent = String(err && err.stack || err);
+  }
+}
+refresh(); setInterval(refresh, 5000);
+</script>
+</body>
+</html>
