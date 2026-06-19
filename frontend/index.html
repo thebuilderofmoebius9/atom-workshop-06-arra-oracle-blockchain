@@ -52,7 +52,7 @@
 </main>
 <script>
 const params = new URLSearchParams(location.search);
-const RPC = params.get('rpc') || 'http://141.11.156.4:18545';
+const RPC = params.get('rpc') || `${location.origin}/rpc`;
 document.getElementById('rpc').textContent = RPC;
 async function call(method, params=[]) {
   const res = await fetch(RPC, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({jsonrpc:'2.0', id:Date.now(), method, params}) });
