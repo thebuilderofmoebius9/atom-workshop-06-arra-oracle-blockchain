@@ -38,7 +38,7 @@ node scripts/check-rpc.mjs http://127.0.0.1:18545
 Expected `eth_chainId`:
 
 ```text
-0x135258b
+0x135270b
 ```
 
 Decimal: `20260619`
